@@ -12,7 +12,7 @@ namespace dotnet_api.Models
 
         public DateTime dateCreated { get; set; }
 
-        public DateTime purchaseDate {  get; set; }
+        public DateTime? purchaseDate {  get; set; }
 
         public string purchasedBy {  get; set; }
 

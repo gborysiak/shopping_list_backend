@@ -19,7 +19,7 @@ namespace dotnet_api.Controllers
             this._apiDbContext = apiDbContext;
         }
 
-
+        /*
         [HttpGet]
         public IActionResult Get()
         {
@@ -39,10 +39,43 @@ namespace dotnet_api.Controllers
 
             return Ok(article);
         }
+        */
 
+        [HttpGet]
+        public IActionResult Get()
+        {
+            var lists = this._apiDbContext.ShoppingLists.ToList();
+
+            return Ok(lists);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult Get(int id)
+        {
+            var list = this._apiDbContext.ShoppingLists.Find(id);
+            if (list == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(list);
+        }
+
+        [HttpPost]
+        public IActionResult CreateShoppingList([FromBody] Models.ShoppingList list)
+        {
+
+            this._apiDbContext.ShoppingLists.Add(list);
+            this._apiDbContext.SaveChanges();
+
+            return Ok();
+        }
+
+        /*
         [HttpPost]
         public IActionResult CreateArticle([FromBody] Part article)
         {
+
             this._apiDbContext.Parts.Add(article);
             this._apiDbContext.SaveChanges();
 
@@ -57,6 +90,7 @@ namespace dotnet_api.Controllers
 
             return Ok();
         }
+        */
     }
 }
 

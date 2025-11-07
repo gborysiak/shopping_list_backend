@@ -13,6 +13,7 @@ namespace dotnet_api.Data
         }
 
         public DbSet<Part> Parts { get; set; }
+        public DbSet<ShoppingList> ShoppingLists { get; set; }
 
     }
 }

@@ -6,11 +6,11 @@
 
         public string name { get; set; }
 
-        public Part[] parts { get; set; }
+        public Part[]? parts { get; set; }
 
-        public User[] owners { get; set; }
+        //public User[]? owners { get; set; }
         
-        public User[]  sharedWith { get; set; }
+        //public User[]?  sharedWith { get; set; }
 
         //shoppingListActions?: Action[]; /
     }

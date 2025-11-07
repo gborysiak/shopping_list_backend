@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using dotnet_api.Data;
 
@@ -11,9 +12,11 @@ using dotnet_api.Data;
 namespace dotnet_api.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    partial class ApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251107160807_Correction2")]
+    partial class Correction2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -261,6 +264,12 @@ namespace dotnet_api.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("ShoppingListid")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ShoppingListid1")
+                        .HasColumnType("int");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -289,6 +298,10 @@ namespace dotnet_api.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("ShoppingListid");
+
+                    b.HasIndex("ShoppingListid1");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -351,9 +364,24 @@ namespace dotnet_api.Migrations
                         .HasForeignKey("ShoppingListid");
                 });
 
+            modelBuilder.Entity("dotnet_api.Models.User", b =>
+                {
+                    b.HasOne("dotnet_api.Models.ShoppingList", null)
+                        .WithMany("owners")
+                        .HasForeignKey("ShoppingListid");
+
+                    b.HasOne("dotnet_api.Models.ShoppingList", null)
+                        .WithMany("sharedWith")
+                        .HasForeignKey("ShoppingListid1");
+                });
+
             modelBuilder.Entity("dotnet_api.Models.ShoppingList", b =>
                 {
+                    b.Navigation("owners");
+
                     b.Navigation("parts");
+
+                    b.Navigation("sharedWith");
                 });
 #pragma warning restore 612, 618
         }

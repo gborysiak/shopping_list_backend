@@ -41,6 +41,9 @@ builder.Services
         };
     });
 
+// Register ProblemDetails service
+builder.Services.AddProblemDetails();
+
 // gestion des routes SPA ( pour angular )
 //builder.Services.AddSpaStaticFiles(configuration =>
 //    configuration.RootPath = "wwwroot"
@@ -61,6 +64,8 @@ if (app.Environment.IsDevelopment())
 //{
 //    spa.Options.SourcePath = "wwwroot";
 //});
+
+
 
 // active l'authentification
 app.UseAuthentication();
