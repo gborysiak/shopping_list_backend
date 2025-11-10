@@ -6,7 +6,7 @@
 
         public string name { get; set; }
 
-        public Part[]? parts { get; set; }
+        public ShoppingListItem[]? ShoppingListItem { get; set; }
 
         //public User[]? owners { get; set; }
         

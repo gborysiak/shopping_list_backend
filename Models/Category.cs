@@ -6,6 +6,5 @@
 
         public string name { get; set; }
 
-        public Part[]  parts { get; set; }
     }
 }

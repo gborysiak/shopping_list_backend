@@ -12,8 +12,8 @@ using dotnet_api.Data;
 namespace dotnet_api.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20251104102427_initialMigration")]
-    partial class initialMigration
+    [Migration("20251109162954_version01")]
+    partial class version01
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -147,19 +147,6 @@ namespace dotnet_api.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("purchaseDate")
-                        .HasColumnType("datetime");
-
-                    b.Property<bool>("purchased")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("purchasedBy")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<float>("quantity")
-                        .HasColumnType("float");
-
                     b.HasKey("id");
 
                     b.ToTable("Parts");
@@ -192,6 +179,58 @@ namespace dotnet_api.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("dotnet_api.Models.ShoppingList", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("id");
+
+                    b.ToTable("ShoppingLists");
+                });
+
+            modelBuilder.Entity("dotnet_api.Models.ShoppingListItem", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<int>("PartRefId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ShoppingListid")
+                        .HasColumnType("int");
+
+                    b.Property<int>("partid")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("purchaseDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<bool>("purchased")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<float>("quantity")
+                        .HasColumnType("float");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("ShoppingListid");
+
+                    b.HasIndex("partid");
+
+                    b.ToTable("ShoppingListItem");
                 });
 
             modelBuilder.Entity("dotnet_api.Models.User", b =>
@@ -252,7 +291,7 @@ namespace dotnet_api.Migrations
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("datetime");
 
-                    b.Property<DateTime>("lastLoggedIn")
+                    b.Property<DateTime?>("lastLoggedIn")
                         .HasColumnType("datetime");
 
                     b.Property<string>("name")
@@ -260,7 +299,6 @@ namespace dotnet_api.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("token")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
@@ -324,6 +362,26 @@ namespace dotnet_api.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("dotnet_api.Models.ShoppingListItem", b =>
+                {
+                    b.HasOne("dotnet_api.Models.ShoppingList", null)
+                        .WithMany("ShoppingListItem")
+                        .HasForeignKey("ShoppingListid");
+
+                    b.HasOne("dotnet_api.Models.Part", "part")
+                        .WithMany()
+                        .HasForeignKey("partid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("part");
+                });
+
+            modelBuilder.Entity("dotnet_api.Models.ShoppingList", b =>
+                {
+                    b.Navigation("ShoppingListItem");
                 });
 #pragma warning restore 612, 618
         }

@@ -14,6 +14,7 @@ namespace dotnet_api.Data
 
         public DbSet<Part> Parts { get; set; }
         public DbSet<ShoppingList> ShoppingLists { get; set; }
+        public DbSet<Category> Categories { get; set; }
 
     }
 }
