@@ -10,7 +10,7 @@ namespace dotnet_api.Models
         public string name { get; set; }
 
         public int categoryId { get; set; }
-        public Category category { get; set; }
+        //public Category category { get; set; }
 
         public DateTime dateCreated { get; set; }
 

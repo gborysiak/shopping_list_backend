@@ -1,4 +1,5 @@
 ﻿using dotnet_api.Data;
+using dotnet_api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,5 +46,28 @@ namespace dotnet_api.Controllers
             return Ok();
         }
 
+        [HttpPut]
+        public IActionResult Update([FromBody] Models.Category category)
+        {
+
+            this._apiDbContext.Categories.Update(category);
+            this._apiDbContext.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var category = this._apiDbContext.Categories.Find(id);
+            if (category == null)
+            {
+                return NotFound();
+            }
+            this._apiDbContext.Categories.Remove(category);
+            this._apiDbContext.SaveChanges();
+
+            return Ok();
+        }
     }
 }
