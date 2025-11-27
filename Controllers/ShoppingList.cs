@@ -3,6 +3,8 @@ using dotnet_api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -19,32 +21,10 @@ namespace dotnet_api.Controllers
             this._apiDbContext = apiDbContext;
         }
 
-        /*
         [HttpGet]
         public IActionResult Get()
         {
-            var parts = this._apiDbContext.Parts.ToList();
-
-            return Ok(parts);
-        }
-
-        [HttpGet("{id}")]
-        public IActionResult Get(int id)
-        {
-            var article = this._apiDbContext.Parts.Find(id);
-            if (article == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(article);
-        }
-        */
-
-        [HttpGet]
-        public IActionResult Get()
-        {
-            var lists = this._apiDbContext.ShoppingLists.ToList();
+            var lists = this._apiDbContext.ShoppingLists.Include(list => list.ShoppingListItem).ToList();
 
             return Ok(lists);
         }
@@ -52,11 +32,14 @@ namespace dotnet_api.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            var list = this._apiDbContext.ShoppingLists.Find(id);
+            var list = this._apiDbContext.ShoppingLists.Where(shoppinglist => shoppinglist.Id == id)
+                .Include(list => list.ShoppingListItem)
+                .ToList();
             if (list == null)
             {
                 return NotFound();
             }
+
 
             return Ok(list);
         }
@@ -68,29 +51,90 @@ namespace dotnet_api.Controllers
             this._apiDbContext.ShoppingLists.Add(list);
             this._apiDbContext.SaveChanges();
 
-            return Ok();
-        }
+            //if( list.ShoppingListItem != null)
+            //{
+            //    foreach(ShoppingListItem item in list.ShoppingListItem)
+            //    {
+            //        // check if exists
+            //        var tempItem = this._apiDbContext.ShoppingListItem.Find(item.Id);
+            //        if( tempItem == null)
+            //        {
+            //            // create
+            //            this._apiDbContext.Add(item);
+            //        }
+            //        else
+            //        {
 
-        /*
-        [HttpPost]
-        public IActionResult CreateArticle([FromBody] Part article)
-        {
-
-            this._apiDbContext.Parts.Add(article);
-            this._apiDbContext.SaveChanges();
+            //        }
+            //    }
+            //}
 
             return Ok();
         }
 
         [HttpPut]
-        public IActionResult EditArticle([FromBody] Part article)
+        public IActionResult UpdateShoppingList([FromBody] Models.ShoppingList list)
         {
-            this._apiDbContext.Parts.Update(article);
+
+            this._apiDbContext.ShoppingLists.Update(list);
+            this._apiDbContext.SaveChanges();
+
+            //if( list.ShoppingListItem != null)
+            //{
+            //    foreach(ShoppingListItem item in list.ShoppingListItem)
+            //    {
+            //        // check if exists
+            //        var tempItem = this._apiDbContext.ShoppingListItem.Find(item.Id);
+            //        if( tempItem == null)
+            //        {
+            //            // create
+            //            this._apiDbContext.Add(item);
+            //        }
+            //        else
+            //        {
+
+            //        }
+            //    }
+            //}
+
+            return Ok();
+        }
+
+        [HttpPut("{id}/Item/{itemId}")]
+        public IActionResult UpdateItem(int id, int itemId, [FromBody] Models.ShoppingListItem item)
+        {
+            this._apiDbContext.ShoppingListItem.Update(item);
             this._apiDbContext.SaveChanges();
 
             return Ok();
         }
-        */
+
+        [HttpDelete("{id}/Item/{itemId}")]
+        public IActionResult DeleteItem(int id, int itemId)
+        {
+            var item = this._apiDbContext.ShoppingListItem.Find(itemId);
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            this._apiDbContext.ShoppingListItem.Remove(item);
+            this._apiDbContext.SaveChanges();
+
+            return Ok();
+        }
+
+
+        //[HttpPost("{id}/Item")]
+        //public IActionResult CreateItem(int id,[FromBody] Models.ShoppingListItem item)
+        //{
+
+        //    this._apiDbContext.ShoppingListItem.Add(item);
+        //    this._apiDbContext.SaveChanges();
+
+        //    return Ok();
+        //}
+
     }
 }
 
