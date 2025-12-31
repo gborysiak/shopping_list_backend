@@ -100,6 +100,22 @@ namespace dotnet_api.Controllers
             return Ok();
         }
 
+        [HttpDelete("{id}")]
+        public IActionResult DeleteShoppingList(int id)
+        {
+            var sl = this._apiDbContext.ShoppingLists.Find(id);
+            if (sl == null)
+            {
+                return NotFound();
+            }
+
+            this._apiDbContext.ShoppingLists.Remove(sl);
+            this._apiDbContext.SaveChanges();
+
+            return Ok();
+        }
+
+
         [HttpPut("{id}/Item/{itemId}")]
         public IActionResult UpdateItem(int id, int itemId, [FromBody] Models.ShoppingListItem item)
         {
