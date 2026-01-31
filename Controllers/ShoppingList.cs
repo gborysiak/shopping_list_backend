@@ -103,15 +103,25 @@ namespace dotnet_api.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteShoppingList(int id)
         {
-            var sl = this._apiDbContext.ShoppingLists.Find(id);
-            if (sl == null)
+            var list = this._apiDbContext.ShoppingLists.Where(shoppinglist => shoppinglist.Id == id)
+                .Include(list => list.ShoppingListItem)
+                .ToList();
+            if (list == null)
             {
                 return NotFound();
             }
 
-            this._apiDbContext.ShoppingLists.Remove(sl);
-            this._apiDbContext.SaveChanges();
+            // remove lists
+            foreach (Models.ShoppingList sl in list)
+            {
+                foreach (ShoppingListItem item in sl.ShoppingListItem)
+                {
+                    this._apiDbContext.ShoppingListItem.Remove(item);
+                }
 
+                this._apiDbContext.ShoppingLists.Remove(sl);
+                this._apiDbContext.SaveChanges();
+            }
             return Ok();
         }
 
