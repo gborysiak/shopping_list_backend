@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using dotnet_api.Data;
 
@@ -11,9 +12,11 @@ using dotnet_api.Data;
 namespace dotnet_api.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    partial class ApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251109162954_version01")]
+    partial class version01
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,23 +132,6 @@ namespace dotnet_api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("dotnet_api.Models.Category", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<string>("name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("id");
-
-                    b.ToTable("Categories");
-                });
-
             modelBuilder.Entity("dotnet_api.Models.Part", b =>
                 {
                     b.Property<int>("id")
@@ -153,9 +139,6 @@ namespace dotnet_api.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<int>("categoryId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("dateCreated")
                         .HasColumnType("datetime");
@@ -200,49 +183,54 @@ namespace dotnet_api.Migrations
 
             modelBuilder.Entity("dotnet_api.Models.ShoppingList", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
 
-                    b.Property<string>("Name")
+                    b.Property<string>("name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.HasKey("Id");
+                    b.HasKey("id");
 
-                    b.ToTable("shoppinglists");
+                    b.ToTable("ShoppingLists");
                 });
 
             modelBuilder.Entity("dotnet_api.Models.ShoppingListItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
 
                     b.Property<int>("PartRefId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("PurchaseDate")
-                        .HasColumnType("datetime");
-
-                    b.Property<bool>("Purchased")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<float>("Quantity")
-                        .HasColumnType("float");
-
-                    b.Property<int?>("ShoppingListId")
+                    b.Property<int?>("ShoppingListid")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<int>("partid")
+                        .HasColumnType("int");
 
-                    b.HasIndex("ShoppingListId");
+                    b.Property<DateTime?>("purchaseDate")
+                        .HasColumnType("datetime");
 
-                    b.ToTable("shoppinglistitem");
+                    b.Property<bool>("purchased")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<float>("quantity")
+                        .HasColumnType("float");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("ShoppingListid");
+
+                    b.HasIndex("partid");
+
+                    b.ToTable("ShoppingListItem");
                 });
 
             modelBuilder.Entity("dotnet_api.Models.User", b =>
@@ -380,7 +368,15 @@ namespace dotnet_api.Migrations
                 {
                     b.HasOne("dotnet_api.Models.ShoppingList", null)
                         .WithMany("ShoppingListItem")
-                        .HasForeignKey("ShoppingListId");
+                        .HasForeignKey("ShoppingListid");
+
+                    b.HasOne("dotnet_api.Models.Part", "part")
+                        .WithMany()
+                        .HasForeignKey("partid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("part");
                 });
 
             modelBuilder.Entity("dotnet_api.Models.ShoppingList", b =>

@@ -1,11 +1,13 @@
 using dotnet_api.Data;
 using dotnet_api.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using System.Net;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,9 +47,12 @@ builder.Services
 builder.Services.AddProblemDetails();
 
 // gestion des routes SPA ( pour angular )
-//builder.Services.AddSpaStaticFiles(configuration =>
-//    configuration.RootPath = "wwwroot"
-//);
+builder.Services.AddSpaStaticFiles(configuration =>
+    configuration.RootPath = "wwwroot"
+);
+
+
+
 
 var app = builder.Build();
 
@@ -59,11 +64,11 @@ if (app.Environment.IsDevelopment())
 
 // active angular
 
-//app.UseSpaStaticFiles();
-//app.UseSpa(spa =>
-//{
-//    spa.Options.SourcePath = "wwwroot";
-//});
+app.UseSpaStaticFiles();
+app.UseSpa(spa =>
+{
+    spa.Options.SourcePath = "wwwroot";
+});
 
 
 

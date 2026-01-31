@@ -42,10 +42,10 @@ namespace dotnet_api.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    token = table.Column<string>(type: "longtext", nullable: false)
+                    token = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     createdAt = table.Column<DateTime>(type: "datetime", nullable: false),
-                    lastLoggedIn = table.Column<DateTime>(type: "datetime", nullable: false),
+                    lastLoggedIn = table.Column<DateTime>(type: "datetime", nullable: true),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
@@ -83,16 +83,26 @@ namespace dotnet_api.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    quantity = table.Column<float>(type: "float", nullable: false),
-                    purchased = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    dateCreated = table.Column<DateTime>(type: "datetime", nullable: false),
-                    purchaseDate = table.Column<DateTime>(type: "datetime", nullable: false),
-                    purchasedBy = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    dateCreated = table.Column<DateTime>(type: "datetime", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Parts", x => x.id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ShoppingLists",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShoppingLists", x => x.id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -217,6 +227,36 @@ namespace dotnet_api.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "ShoppingListItem",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    PartRefId = table.Column<int>(type: "int", nullable: false),
+                    partid = table.Column<int>(type: "int", nullable: false),
+                    quantity = table.Column<float>(type: "float", nullable: false),
+                    purchased = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    purchaseDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    ShoppingListid = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShoppingListItem", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_ShoppingListItem_Parts_partid",
+                        column: x => x.partid,
+                        principalTable: "Parts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ShoppingListItem_ShoppingLists_ShoppingListid",
+                        column: x => x.ShoppingListid,
+                        principalTable: "ShoppingLists",
+                        principalColumn: "id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -253,6 +293,16 @@ namespace dotnet_api.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShoppingListItem_partid",
+                table: "ShoppingListItem",
+                column: "partid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShoppingListItem_ShoppingListid",
+                table: "ShoppingListItem",
+                column: "ShoppingListid");
         }
 
         /// <inheritdoc />
@@ -274,13 +324,19 @@ namespace dotnet_api.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Parts");
+                name: "ShoppingListItem");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Parts");
+
+            migrationBuilder.DropTable(
+                name: "ShoppingLists");
         }
     }
 }
