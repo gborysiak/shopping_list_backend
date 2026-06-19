@@ -72,6 +72,33 @@ namespace dotnet_api.Controllers
             return Ok();
         }
 
+        [HttpPost("/api/ResetShoppingList")]
+        public IActionResult ResetShoppingList([FromBody] Models.ShoppingList list)
+        {
+            //var list = this._apiDbContext.ShoppingLists.Where(shoppinglist => shoppinglist.Id == id)
+            //    .Include(list => list.ShoppingListItem)
+            //    .ToList();  
+            if (list == null)
+            {
+                return NotFound();
+            }
+
+            // update list
+            //foreach (Models.ShoppingList sl in list)
+            //{
+                foreach (ShoppingListItem item in list.ShoppingListItem)
+                {
+                    item.Purchased = false;
+                    item.PurchaseDate = null;
+                    this._apiDbContext.ShoppingListItem.Update(item);
+                }
+
+                this._apiDbContext.SaveChanges();
+            //}
+
+            return Ok();
+        }
+
         [HttpPut]
         public IActionResult UpdateShoppingList([FromBody] Models.ShoppingList list)
         {
