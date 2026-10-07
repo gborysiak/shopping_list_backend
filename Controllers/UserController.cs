@@ -68,25 +68,28 @@ namespace dotnet_api.Controllers
             );
 
             if (result.Succeeded)
+            {
+                var dbUser = await this.userManager.FindByNameAsync(user.Username);
                 return Ok(new LoginResponseVM
                 {
                     Username = user.Username,
-                    Password = user.Password,
-                    Token = this.GenerateToken(user.Username)
+                    Token = this.GenerateToken(dbUser!)
                 });
+            }
 
             return BadRequest("Erreur dans l'authentification de l'utilisateur");
         }
 
-        private string GenerateToken(string email)
+        private string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(this.secretkey);
+            var key = Encoding.UTF8.GetBytes(this.secretkey);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Email, email)
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.UserName!)
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

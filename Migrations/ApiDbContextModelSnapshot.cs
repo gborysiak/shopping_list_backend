@@ -210,6 +210,9 @@ namespace dotnet_api.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("shoppinglists");

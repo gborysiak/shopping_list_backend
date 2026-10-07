@@ -25,7 +25,8 @@ builder.Services.AddDbContext<ApiDbContext>(options =>
 builder.Services.AddDefaultIdentity<User>()
     .AddEntityFrameworkStores<ApiDbContext>();
 
-string secretkey = builder.Configuration.GetValue<string>("SecretKey");
+string secretkey = builder.Configuration.GetValue<string>("SecretKey")
+    ?? throw new InvalidOperationException("SecretKey manquante (user-secrets en dev, variable d'environnement en prod)");
 
 // authentification JWT
 builder.Services
@@ -37,7 +38,7 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretkey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretkey)),
             ValidateIssuer = false,
             ValidateAudience = false
         };
@@ -62,25 +63,19 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// active angular
+app.UseHttpsRedirection();
+app.UseCors(options => options
+    .WithOrigins(app.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [])
+    .AllowAnyMethod().AllowAnyHeader());
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
+// active angular (en dernier : fallback vers index.html)
 app.UseSpaStaticFiles();
 app.UseSpa(spa =>
 {
     spa.Options.SourcePath = "wwwroot";
 });
-
-
-
-// active l'authentification
-app.UseAuthentication();
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 app.Run();

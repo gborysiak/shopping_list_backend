@@ -13,6 +13,9 @@ namespace dotnet_api.Models
         [Required]
         public string Name { get; set; }
 
+        // positionné côté serveur depuis le JWT, jamais lu du client
+        public int OwnerId { get; set; }
+
         //public ShoppingListItem[] ShoppingListItem { get; set; }
         public ICollection<ShoppingListItem> ShoppingListItem { get; set; }
 
