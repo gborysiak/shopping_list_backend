@@ -93,7 +93,23 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+if (!app.Environment.IsDevelopment())
+    app.UseHsts(); // 30 jours par défaut; ajouter HstsOptions (MaxAge, IncludeSubDomains) une fois HTTPS validé partout
+
 app.UseHttpsRedirection();
+
+// en-têtes de sécurité sur toutes les réponses
+// ponytail: pas de CSP complète (script-src/style-src) car le build Angular inline du CSS critique; à ajouter avec nonces si besoin
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Referrer-Policy"] = "no-referrer";
+    headers["Content-Security-Policy"] = "frame-ancestors 'none'";
+    await next();
+});
+
 app.UseCors(options => options
     .WithOrigins(app.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [])
     .AllowAnyMethod().AllowAnyHeader());
