@@ -1,4 +1,5 @@
 ﻿using dotnet_api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -26,10 +27,14 @@ namespace dotnet_api.Controllers
 
             this.secretkey = this.configuration.GetValue<string>("SecretKey");
         }
-        [HttpGet("logout")]
+        // invalide tous les jetons de l'utilisateur (security stamp)
+        [Authorize]
+        [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            await this.signInManager.SignOutAsync();
+            var user = await this.userManager.GetUserAsync(User);
+            if (user != null)
+                await this.userManager.UpdateSecurityStampAsync(user);
 
             return Ok();
         }
@@ -63,27 +68,26 @@ namespace dotnet_api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest("Données invalides");
 
-            var result = await this.signInManager.PasswordSignInAsync(
-                user.Username,
-                user.Password,
-                isPersistent: false,
-                lockoutOnFailure: true
-            );
-
-            if (result.Succeeded)
+            var dbUser = await this.userManager.FindByNameAsync(user.Username);
+            if (dbUser != null)
             {
-                var dbUser = await this.userManager.FindByNameAsync(user.Username);
-                return Ok(new LoginResponseVM
+                // pas de cookie Identity: l'authentification se fait uniquement par JWT
+                var result = await this.signInManager.CheckPasswordSignInAsync(dbUser, user.Password, lockoutOnFailure: true);
+
+                if (result.Succeeded)
                 {
-                    Username = user.Username,
-                    Token = this.GenerateToken(dbUser!)
-                });
+                    return Ok(new LoginResponseVM
+                    {
+                        Username = user.Username,
+                        Token = await this.GenerateToken(dbUser)
+                    });
+                }
             }
 
             return BadRequest("Erreur dans l'authentification de l'utilisateur");
         }
 
-        private string GenerateToken(User user)
+        private async Task<string> GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(this.secretkey);
@@ -92,9 +96,12 @@ namespace dotnet_api.Controllers
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName!)
+                    new Claim(ClaimTypes.Name, user.UserName!),
+                    new Claim(this.userManager.Options.ClaimsIdentity.SecurityStampClaimType, await this.userManager.GetSecurityStampAsync(user))
                 }),
-                Expires = DateTime.UtcNow.AddDays(7),
+                Issuer = this.configuration["Jwt:Issuer"],
+                Audience = this.configuration["Jwt:Audience"],
+                Expires = DateTime.UtcNow.AddMinutes(this.configuration.GetValue("Jwt:ExpiresMinutes", 1440)),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

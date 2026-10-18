@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using System.Text;
 
@@ -38,13 +39,28 @@ builder.Services
     .AddJwtBearer(options =>
     {
         options.RequireHttpsMetadata = true; // a changer si https
-        options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretkey)),
-            ValidateIssuer = false,
-            ValidateAudience = false
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"]
+        };
+        // révocation: le jeton porte le security stamp de l'utilisateur (changé au logout / changement de mot de passe)
+        // ponytail: une lecture en base par requête authentifiée; mettre en cache si le trafic augmente
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var users = context.HttpContext.RequestServices.GetRequiredService<UserManager<User>>();
+                var user = await users.GetUserAsync(context.Principal!);
+                var stamp = context.Principal!.FindFirstValue(users.Options.ClaimsIdentity.SecurityStampClaimType);
+                if (user == null || user.SecurityStamp != stamp)
+                    context.Fail("Jeton révoqué");
+            }
         };
     });
 
