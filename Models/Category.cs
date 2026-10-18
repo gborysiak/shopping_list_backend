@@ -9,6 +9,9 @@ namespace dotnet_api.Models
 
         public string name { get; set; }
 
+        // positionné côté serveur depuis le JWT, jamais lu du client
+        public int OwnerId { get; set; }
+
 
     }
 }

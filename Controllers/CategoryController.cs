@@ -1,7 +1,7 @@
-﻿using dotnet_api.Data;
-using dotnet_api.Models;
+using dotnet_api.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace dotnet_api.Controllers
 {
@@ -16,18 +16,23 @@ namespace dotnet_api.Controllers
         {
             this._apiDbContext = apiDbContext;
         }
+
+        private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        // catégories de l'utilisateur connecté uniquement
+        private IQueryable<Models.Category> MyCategories =>
+            this._apiDbContext.Categories.Where(c => c.OwnerId == UserId);
+
         [HttpGet]
         public IActionResult Get()
         {
-            var categories = this._apiDbContext.Categories.ToList();
-
-            return Ok(categories);
+            return Ok(MyCategories.ToList());
         }
 
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            var category = this._apiDbContext.Categories.Find(id);
+            var category = MyCategories.FirstOrDefault(c => c.id == id);
             if (category == null)
             {
                 return NotFound();
@@ -39,6 +44,8 @@ namespace dotnet_api.Controllers
         [HttpPost]
         public IActionResult CreatePart([FromBody] Models.Category category)
         {
+            category.id = 0;
+            category.OwnerId = UserId;
 
             this._apiDbContext.Categories.Add(category);
             this._apiDbContext.SaveChanges();
@@ -49,8 +56,13 @@ namespace dotnet_api.Controllers
         [HttpPut]
         public IActionResult Update([FromBody] Models.Category category)
         {
+            var mine = MyCategories.FirstOrDefault(c => c.id == category.id);
+            if (mine == null)
+            {
+                return NotFound();
+            }
 
-            this._apiDbContext.Categories.Update(category);
+            mine.name = category.name;
             this._apiDbContext.SaveChanges();
 
             return Ok();
@@ -59,7 +71,7 @@ namespace dotnet_api.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var category = this._apiDbContext.Categories.Find(id);
+            var category = MyCategories.FirstOrDefault(c => c.id == id);
             if (category == null)
             {
                 return NotFound();

@@ -50,6 +50,11 @@ namespace dotnet_api.Controllers
         [HttpPost]
         public IActionResult CreateShoppingList([FromBody] Models.ShoppingList list)
         {
+            if (!OwnsParts(list.ShoppingListItem?.Select(i => i.PartRefId) ?? []))
+            {
+                return BadRequest();
+            }
+
             list.OwnerId = UserId;
             this._apiDbContext.ShoppingLists.Add(list);
             this._apiDbContext.SaveChanges();
@@ -99,6 +104,11 @@ namespace dotnet_api.Controllers
                 return BadRequest();
             }
 
+            if (!OwnsParts(list.ShoppingListItem?.Select(i => i.PartRefId) ?? []))
+            {
+                return BadRequest();
+            }
+
             list.OwnerId = UserId;
             this._apiDbContext.ShoppingLists.Update(list);
             this._apiDbContext.SaveChanges();
@@ -131,6 +141,14 @@ namespace dotnet_api.Controllers
             return Ok();
         }
 
+        // les pièces référencées doivent appartenir à l'utilisateur
+        private bool OwnsParts(IEnumerable<int> partIds)
+        {
+            var ids = partIds.Distinct().ToList();
+            var uid = UserId;
+            return this._apiDbContext.Parts.Count(p => ids.Contains(p.id) && p.OwnerId == uid) == ids.Count;
+        }
+
         // item de la liste {id}, à condition que la liste soit à l'utilisateur
         private ShoppingListItem? MyItem(int id, int itemId)
         {
@@ -147,6 +165,11 @@ namespace dotnet_api.Controllers
             if (mine == null)
             {
                 return NotFound();
+            }
+
+            if (!OwnsParts([item.PartRefId]))
+            {
+                return BadRequest();
             }
 
             mine.PartRefId = item.PartRefId;

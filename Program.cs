@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using System.Net;
+using System.Threading.RateLimiting;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,9 @@ builder.Services.AddDefaultIdentity<User>()
 string secretkey = builder.Configuration.GetValue<string>("SecretKey")
     ?? throw new InvalidOperationException("SecretKey manquante (user-secrets en dev, variable d'environnement en prod)");
 
+if (Encoding.UTF8.GetByteCount(secretkey) < 32)
+    throw new InvalidOperationException("SecretKey trop courte (32 octets minimum, 64 recommandés)");
+
 // authentification JWT
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -43,6 +47,16 @@ builder.Services
             ValidateAudience = false
         };
     });
+
+// limite le débit de login/inscription par IP (anti force brute)
+// ponytail: IP directe; derrière un proxy, activer ForwardedHeaders pour ne pas limiter tout le monde ensemble
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
+});
 
 // Register ProblemDetails service
 builder.Services.AddProblemDetails();
@@ -67,6 +81,7 @@ app.UseHttpsRedirection();
 app.UseCors(options => options
     .WithOrigins(app.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [])
     .AllowAnyMethod().AllowAnyHeader());
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

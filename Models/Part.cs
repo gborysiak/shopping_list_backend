@@ -14,6 +14,9 @@ namespace dotnet_api.Models
 
         public DateTime dateCreated { get; set; }
 
+        // positionné côté serveur depuis le JWT, jamais lu du client
+        public int OwnerId { get; set; }
+
 
     }
 }

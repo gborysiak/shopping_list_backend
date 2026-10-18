@@ -1,6 +1,7 @@
-﻿using dotnet_api.Data;
+using dotnet_api.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace dotnet_api.Controllers
 {
@@ -15,18 +16,27 @@ namespace dotnet_api.Controllers
         {
             this._apiDbContext = apiDbContext;
         }
+
+        private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        // pièces de l'utilisateur connecté uniquement
+        private IQueryable<Models.Part> MyParts =>
+            this._apiDbContext.Parts.Where(p => p.OwnerId == UserId);
+
+        // la catégorie référencée doit appartenir à l'utilisateur
+        private bool OwnsCategory(int categoryId) =>
+            this._apiDbContext.Categories.Any(c => c.id == categoryId && c.OwnerId == UserId);
+
         [HttpGet]
         public IActionResult Get()
         {
-            var parts = this._apiDbContext.Parts.ToList();
-
-            return Ok(parts);
+            return Ok(MyParts.ToList());
         }
 
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            var part = this._apiDbContext.Parts.Find(id);
+            var part = MyParts.FirstOrDefault(p => p.id == id);
             if (part == null)
             {
                 return NotFound();
@@ -38,6 +48,13 @@ namespace dotnet_api.Controllers
         [HttpPost]
         public IActionResult CreatePart([FromBody] Models.Part part)
         {
+            if (!OwnsCategory(part.categoryId))
+            {
+                return BadRequest();
+            }
+
+            part.id = 0;
+            part.OwnerId = UserId;
             part.dateCreated = DateTime.Now;
 
             this._apiDbContext.Parts.Add(part);
@@ -49,12 +66,19 @@ namespace dotnet_api.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] Models.Part part)
         {
-            //var oldpart = this._apiDbContext.Parts.Find(id);
-            //if (oldpart == null)
-            //{
-            //    return NotFound();
-            //}
-            this._apiDbContext.Parts.Update(part);
+            var mine = MyParts.FirstOrDefault(p => p.id == id);
+            if (mine == null)
+            {
+                return NotFound();
+            }
+
+            if (!OwnsCategory(part.categoryId))
+            {
+                return BadRequest();
+            }
+
+            mine.name = part.name;
+            mine.categoryId = part.categoryId;
             this._apiDbContext.SaveChanges();
 
             return Ok();
@@ -63,7 +87,7 @@ namespace dotnet_api.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var part = this._apiDbContext.Parts.Find(id);
+            var part = MyParts.FirstOrDefault(p => p.id == id);
             if (part == null)
             {
                 return NotFound();

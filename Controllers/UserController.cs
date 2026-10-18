@@ -1,6 +1,7 @@
 ﻿using dotnet_api.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -33,6 +34,7 @@ namespace dotnet_api.Controllers
             return Ok();
         }
 
+        [EnableRateLimiting("auth")]
         [HttpPost("subscribe")]
         public async Task<IActionResult> Subscribe([FromBody] UserVM user)
         {
@@ -54,6 +56,7 @@ namespace dotnet_api.Controllers
             return BadRequest("Erreur dans la création de l'utilisateur : " + string.Join(",", result.Errors.Select(error => error.Description)));
         }
 
+        [EnableRateLimiting("auth")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginVM user)
         {
@@ -64,7 +67,7 @@ namespace dotnet_api.Controllers
                 user.Username,
                 user.Password,
                 isPersistent: false,
-                lockoutOnFailure: false
+                lockoutOnFailure: true
             );
 
             if (result.Succeeded)
