@@ -28,3 +28,6 @@
 /wwwroot/prerendered-routes.json
 /wwwroot/scripts-WRAW5D46.js
 /wwwroot/styles-JIRG6YNR.css
+
+*.user
+graphify-out/
